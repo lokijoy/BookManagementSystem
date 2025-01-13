@@ -1,77 +1,95 @@
 buildscript {
-	dependencies {
-		classpath 'org.flywaydb:flyway-database-postgresql:10.20.1'
-	}
+    dependencies {
+        classpath 'org.flywaydb:flyway-database-postgresql:10.20.1'
+    }
 }
 
 plugins {
-	id 'org.jetbrains.kotlin.jvm' version '1.9.25'
-	id 'org.jetbrains.kotlin.plugin.spring' version '1.9.25'
-	id 'org.springframework.boot' version '3.4.1'
-	id 'io.spring.dependency-management' version '1.1.7'
-	id 'org.jooq.jooq-codegen-gradle' version '3.19.16'
-	id 'org.flywaydb.flyway' version '10.20.1'
+    id 'org.jetbrains.kotlin.jvm' version '1.9.25'
+    id 'org.jetbrains.kotlin.plugin.spring' version '1.9.25'
+    id 'org.springframework.boot' version '3.4.1'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.jooq.jooq-codegen-gradle' version '3.19.16'
+    id 'org.flywaydb.flyway' version '10.20.1'
 }
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-jooq'
-	implementation 'org.flywaydb:flyway-core'
-	implementation 'org.flywaydb:flyway-database-postgresql'
-	implementation 'org.jetbrains.kotlin:kotlin-reflect'
-	developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
-	runtimeOnly 'org.postgresql:postgresql'
-	jooqCodegen 'org.postgresql:postgresql'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	runtimeOnly 'org.flywaydb:flyway-database-postgresql:10.20.1'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-jooq'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+    implementation 'org.jetbrains.kotlin:kotlin-reflect'
+    developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
+    runtimeOnly 'org.postgresql:postgresql'  // 実行時に使用するPostgreSQLドライバ
+    jooqCodegen 'org.postgresql:postgresql' // jOOQのコード生成時に必要なPostgreSQLドライバ
+    implementation 'org.jooq:jooq' // jOOQライブラリ
+    implementation 'org.jooq:jooq-meta' // メタデータの取得用jOOQライブラリ
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    runtimeOnly 'org.flywaydb:flyway-database-postgresql:10.20.1'
 }
 
 kotlin {
-	compilerOptions {
-		freeCompilerArgs.addAll '-Xjsr305=strict'
-	}
+    compilerOptions {
+        freeCompilerArgs.addAll '-Xjsr305=strict'
+    }
 }
 
 flyway {
-	url = "jdbc:postgresql://localhost:5432/sample-db"
-	user = "postgres"
-	password = "passwd"
+    url = "jdbc:postgresql://localhost:5432/sample-db"
+    user = "postgres"
+    password = "passwd"
 }
 
 jooq {
-	configuration {
-		jdbc {
-			url      = "jdbc:postgresql://localhost:5432/sample-db" // DBの接続先
-			username = "postgres" // DBのユーザ名
-			password = "passwd" // DBのパスワード
-		}
+    configuration {
+        jdbc {
+            url = "jdbc:postgresql://localhost:5432/sample-db" // DBの接続先
+            username = "postgres" // DBのユーザ名
+            password = "passwd" // DBのパスワード
+        }
 
-		generator {
-			name = "org.jooq.codegen.KotlinGenerator"
-			target {
-				packageName = "com.example.db" // 自動生成するソースのパッケージを指定
-			}
-			database {
-				name = "org.jooq.meta.postgres.PostgresDatabase"
-				inputSchema = "public"
-				includes = ".*"
-				excludes = "flyway_schema_history"
-			}
-		}
-	}
+        generator {
+            name = "org.jooq.codegen.KotlinGenerator"
+            target {
+                packageName = "com.example.db" // 自動生成するソースのパッケージを指定
+            }
+            database {
+                name = "org.jooq.meta.postgres.PostgresDatabase"
+                inputSchema = "public"
+                includes = ".*"
+                excludes = "flyway_schema_history"
+            }
+        }
+    }
+}
+
+sourceSets {
+    main {
+        kotlin {
+            srcDir("build/generated-sources/jooq") // デフォルトのコード生成先をコンパイル対象に追加
+        }
+    }
+    test {
+        kotlin {
+            srcDir("src/test/kotlin")
+        }
+    }
+}
+
+test {
+    useJUnitPlatform() // JUnit 5 を有効にする
 }

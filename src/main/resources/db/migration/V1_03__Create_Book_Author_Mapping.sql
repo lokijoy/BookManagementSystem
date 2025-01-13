@@ -1,5 +1,5 @@
--- 書籍テーブル
-CREATE TABLE mapping_book_author (
+-- 書籍・著者対応テーブル
+CREATE TABLE book_author_mapping (
     book_id INT,
     author_id INT,
     created_by VARCHAR(45) NOT NULL,
